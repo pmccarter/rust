@@ -22,8 +22,9 @@ WORKDIR /build/
 COPY scripts/musl-toolchain.sh /build/
 # We need to mitigate rust-lang/rust#34978 when compiling musl itself as well
 # TODO: Check what this issue is and if we can ignore it
-
-RUN bash musl-toolchain.sh x86_64-linux-musl && rm -rf build
+RUN CFLAGS="-Wa,-mrelax-relocations=no" \
+    CXXFLAGS="-Wa,-mrelax-relocations=no" \
+    bash musl-toolchain.sh x86_64-linux-musl && rm -rf build
 
 COPY scripts/sccache.sh /scripts/
 RUN sh /scripts/sccache.sh
@@ -49,6 +50,4 @@ ENV HOSTS=x86_64-unknown-linux-musl \
 
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 
-ENV SCRIPT \
-      python2.7 ../x.py test --target $HOSTS && \
-      python2.7 ../x.py dist --host $HOSTS --target $HOSTS
+ENV SCRIPT python2.7 ../x.py dist --host $HOSTS --target $HOSTS
